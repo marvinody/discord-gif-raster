@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"image"
-	"image/color"
 	"image/gif"
 	"log"
 	"math"
@@ -20,8 +19,8 @@ var (
 
 	discordEmojiBounds image.Rectangle
 
-	discordEmojiVerticalSpacer   = 3
-	discordEmojiHorizontalSpacer = 5
+	discordEmojiVerticalSpacer   = 0
+	discordEmojiHorizontalSpacer = 0
 
 	horizontalSpacing int
 	verticalSpacing   int
@@ -140,26 +139,17 @@ func main() {
 			croppingBounds := cropped.Bounds()
 			// some bounds checking
 			endBounds := croppingBounds.Add(cropCornerStart)
-			sectioned := false
 			// so, if we out "cropping" region is OOB, limit it
 			if endBounds.Max.X > scaledImageBounds.Max.X {
 				croppingBounds.Max.X = scaledImageBounds.Max.X - endBounds.Min.X
-				sectioned = true
 			}
 			if endBounds.Max.Y > scaledImageBounds.Max.Y {
 				croppingBounds.Max.Y = scaledImageBounds.Max.Y - endBounds.Min.Y
-				sectioned = true
 			}
-			// and if we don't have a full emoji block, we NEED transparency
-			// gifs have limited palettes, so we need to replace a color with transparent
-			// "need" because not sure if one exists already, but 1 color shouldn't matter too much?
-			if sectioned {
-				idx := findLeastUsedColor(scaled, croppingBounds)
-				// the palette may not have a color for transparent, so let's do this
-				cropped.Palette[idx] = color.Transparent
-				// put transparent background before copying main data
-				draw.Draw(cropped, cropped.Bounds(), image.Transparent, image.ZP, draw.Src)
-			}
+
+			// put transparent background before copying main data
+			draw.Draw(cropped, cropped.Bounds(), image.Transparent, image.ZP, draw.Src)
+
 			// copy from resized frame to cropped frame
 			draw.Draw(cropped, croppingBounds, scaled, cropCornerStart, draw.Src)
 			segmentedGif.Image[idx] = cropped
